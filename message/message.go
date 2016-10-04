@@ -44,28 +44,23 @@ func DecodePost(postMessage string) []*Message{
 	messages := strings.Split(postMessage,"--NEWMESSAGE--\n")
 	for _,onemessage:= range messages {
 		if onemessage == "" { continue }
+		log.Println(onemessage)
 		DecodedMessages = append(DecodedMessages, 
 			Decode("--NEWMESSAGE--\n"+onemessage))
 	}
 	return DecodedMessages
 }
 
-func DecryptPost(publicPostMessage string) (error, string) {
-	// Read armored private key into type EntityList
-	// An EntityList contains one or more Entities.
-	// This assumes there is only one Entity involved
-	entitylist, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(privateKey))
+func DecryptPost(publicPostMessage string, keys *Keys) (error, string) {
+	entitylist, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(keys.Private))
 	if err != nil {
 		log.Fatal(err)
 		return err, "" 
 	}
 	entity := entitylist[0]
-	fmt.Println("Private key from armored string:", entity.Identities)
 
-	// Decrypt private key using passphrase
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
-		fmt.Println("Decrypting private key using passphrase")
-		err := entity.PrivateKey.Decrypt(passphrase)
+		err := entity.PrivateKey.Decrypt(keys.Passphrase)
 		if err != nil {
 			log.Println(err)
 			return err, ""
@@ -73,7 +68,7 @@ func DecryptPost(publicPostMessage string) (error, string) {
 	}
 	for _, subkey := range entity.Subkeys {
 		if subkey.PrivateKey != nil && subkey.PrivateKey.Encrypted {
-			err := subkey.PrivateKey.Decrypt(passphrase)
+			err := subkey.PrivateKey.Decrypt(keys.Passphrase)
 			if err != nil {
 				fmt.Println("failed to decrypt subkey")
 				log.Println(err)
@@ -88,7 +83,7 @@ func DecryptPost(publicPostMessage string) (error, string) {
 		return err, ""
 	}
 
-	md, err := openpgp.ReadMessage(bytes.NewBuffer(dec), entitylist, nil /* no prompt */, nil)
+	md, err := openpgp.ReadMessage(bytes.NewBuffer(dec), entitylist, nil, nil)
 	if err != nil {
 		log.Println(err, nil)
 		return err, "" 
@@ -98,8 +93,8 @@ func DecryptPost(publicPostMessage string) (error, string) {
 	return  nil, string(bytes)
 }
 
-func EncryptPost(postMessage string) string {
-	entitylist, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(publicKey))
+func EncryptPost(postMessage string, keys *Keys) string {
+	entitylist, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(keys.Public))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,14 +111,6 @@ func EncryptPost(postMessage string) string {
 	if err != nil {
 	}
 
-	// Output as base64 encoded string
 	bytes, err := ioutil.ReadAll(buf)
 	return base64.StdEncoding.EncodeToString(bytes)
 }
-
-const passphrase = []byte("")
-const publicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
------END PGP PUBLIC KEY BLOCK-----`
-
-const privateKey = `-----BEGIN PGP PRIVATE KEY BLOCK-----
------END PGP PRIVATE KEY BLOCK-----`

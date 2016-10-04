@@ -7,7 +7,7 @@ import(
 	"log"
 	"github.com/mywebmyresponsibility.org/message"
 )
-
+ var myKeys *message.Keys
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
     	fmt.Fprintf(w, "<h1>Ola Enfermeira</h1><div></div>",)
@@ -24,7 +24,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		err, mStr := message.DecryptPost(string(messageStr))
+		err, mStr := message.DecryptPost(string(messageStr), myKeys)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
@@ -39,27 +39,30 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 func EncryptHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	var byteSizeLimit int64 = 1048576
-	var messageStr string
 	if(r.ContentLength < byteSizeLimit) {
 		messageStr, err := ioutil.ReadAll(r.Body);
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Println(err)
 		}
-		m := message.EncryptPost(string(messageStr))
+		m := message.EncryptPost(string(messageStr), myKeys)
 		fmt.Fprintf(w,"%s",m)
 	}
 	w.WriteHeader(http.StatusBadRequest)
 }
 
 func main() {
-
+ var err error
+ myKeys, err = message.NewKeys("./privatekey.asc", "./publickey.asc", []byte("password"))
+ if err!= nil {
+	log.Fatal(err)
+ }
  fmt.Println("My web my responsibility")
  http.HandleFunc("/view", viewHandler)
  http.HandleFunc("/message", MessageHandler)
  http.HandleFunc("/crypt", EncryptHandler)
- err := http.ListenAndServeTLS(":443", "./cert.pem", "./key.pem", nil)
+ err = http.ListenAndServeTLS(":443", "./cert.pem", "./key.pem", nil)
  if err != nil {
- 	log.Fatal("ListenAndServe: ", err)
+	log.Fatal("ListenAndServe: ", err)
  }
 }
