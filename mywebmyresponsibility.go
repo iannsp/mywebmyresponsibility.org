@@ -6,6 +6,9 @@ import(
 	"io/ioutil"
 	"log"
 	"github.com/mywebmyresponsibility.org/message"
+	"bufio"
+	"os"
+
 )
  var myKeys *message.Keys
 func viewHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +56,15 @@ func EncryptHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
  var err error
- myKeys, err = message.NewKeys("./privatekey.asc", "./publickey.asc", []byte("password"))
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter Password: ")
+	pwd, _ := reader.ReadString('\n')
+ myKeys, err = message.NewKeys("./privatekey.asc", "./publickey.asc", []byte(pwd[0:len(pwd)-1]))
+
  if err!= nil {
 	log.Fatal(err)
  }
+
  fmt.Println("My web my responsibility")
  http.HandleFunc("/view", viewHandler)
  http.HandleFunc("/message", MessageHandler)
