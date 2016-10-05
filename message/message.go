@@ -23,7 +23,7 @@ func NewMessage(kind string) *Message {
 
 // SetContent add content to the message.
 func (m *Message)SetContent(content string) {
-	m.Content = content
+	m.Content = strings.Trim(content, "\n")
 }
 
 // Encode return the message string and need be prepared by the data service. 
@@ -33,9 +33,15 @@ func Encode(m *Message) string {
 }
 
 func Decode(message string) *Message {
-	parts := strings.Split(message,"\n")
-	m := NewMessage(strings.Split(parts[1]," ")[1])
-	m.SetContent(strings.Replace(parts[2], "CONTENT ", "",1))
+        parts := strings.Split(message,"\n")
+	if strings.Split(parts[1]," ")[0] != "KIND" || strings.Split(parts[2]," ")[0] != "CONTENT" {
+		log.Fatal("vix")
+	}
+	kind := strings.Split(parts[1]," ")[1]
+	content := strings.Replace(message,"--NEWMESSAGE--\n"+parts[1]+"\nCONTENT ","",1)
+
+	m := NewMessage(kind)
+	m.SetContent(content)
 	return m
 }
 
