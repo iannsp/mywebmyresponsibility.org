@@ -29,6 +29,13 @@ func (m *Message)SetContent(content string) {
 	m.Content = strings.TrimRight(content, "\n")
 }
 
+func (m *Message)Equals(msgToCompare *Message) bool {
+	return 	msgToCompare.Kind == m.Kind &&
+		msgToCompare.Content == m.Content  /* ||
+		mPost[0].DateTime != m.DateTime*/ 
+	
+
+}
 // Encode return the message string and need be prepared by the data service. 
 func Encode(m *Message) string {
 	return fmt.Sprintf("--NEWMESSAGE--\nDATE %s\nKIND %s\nCONTENT %s\n",m.DateTime.Format("20060102150405"), m.Kind, m.Content)

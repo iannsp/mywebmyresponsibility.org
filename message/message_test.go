@@ -80,9 +80,7 @@ func TestDecodePostMessage(t *testing.T) {
 		mPost := message.DecodePost(message.Encode(m))
 		t.Log(mPost[0].DateTime)
 		t.Log(m.DateTime)
-		if mPost[0].Kind != m.Kind ||
-		   mPost[0].Content != m.Content { /* ||
-		   mPost[0].DateTime != m.DateTime*/ 
+		if !mPost[0].Equals(m) { 
 			t.Error("mensagem formatada incorretamente\n"/*, m , mPost[0]*/)
 		}
 		encoded = encoded+ message.Encode(m)
@@ -91,9 +89,7 @@ func TestDecodePostMessage(t *testing.T) {
 
 	messages:= message.DecodePost(encoded)
 	for i,onemessage:= range messages {
-		if onemessage.Kind != msgs[i].Kind ||
-			   onemessage.Content != msgs[i].Content { /* ||
-			   onemessage.DateTime != msgs[i].DateTime {*/
+		if !onemessage.Equals(msgs[i]) {
 				t.Error("mensagem multipla formatada incorretamente\n", onemessage , msgs[i])
 		}
 	}
