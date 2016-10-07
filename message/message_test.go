@@ -66,9 +66,9 @@ func TestDecode(t *testing.T) {
 	m := message.NewMessage("nota")
 	m.SetContent("ainda nao sei se eh por aqui que esta a resposta")
 	messageString := message.Encode(m)
-	decodedMessage := message.Decode(messageString)
-	if m.Kind != decodedMessage.Kind || m.Content !=  decodedMessage.Content {
-		t.Error("decode fail", decodedMessage.Kind,"\n", decodedMessage.Content)
+	err, decodedMessage := message.Decode(messageString)
+	if err != nil || m.Kind != decodedMessage.Kind || m.Content !=  decodedMessage.Content {
+		t.Error("decode fail", decodedMessage.Kind,"\n", decodedMessage.Content, err)
 	}
 }
 
@@ -77,9 +77,12 @@ func TestDecodePostMessage(t *testing.T) {
 	encoded  :=""
 	for _,msg := range tests {
 		m := createMessage(msg.Kind, msg.Content, msg.Dt)
-		mPost := message.DecodePost(message.Encode(m))
+		err, mPost := message.DecodePost(message.Encode(m))
 		t.Log(mPost[0].DateTime)
 		t.Log(m.DateTime)
+		if err != nil {
+			t.Error(err)
+		}
 		if !mPost[0].Equals(m) { 
 			t.Error("mensagem formatada incorretamente\n"/*, m , mPost[0]*/)
 		}
@@ -87,7 +90,11 @@ func TestDecodePostMessage(t *testing.T) {
 		msgs = append(msgs,m)
 	}
 
-	messages:= message.DecodePost(encoded)
+	err, messages:= message.DecodePost(encoded)
+	if err != nil {
+		t.Error(err)
+	}
+
 	for i,onemessage:= range messages {
 		if !onemessage.Equals(msgs[i]) {
 				t.Error("mensagem multipla formatada incorretamente\n", onemessage , msgs[i])

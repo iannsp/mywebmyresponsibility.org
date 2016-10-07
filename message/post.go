@@ -11,15 +11,18 @@ import(
 
 )
 
-func DecodePost(postMessage string) []*Message{
+func DecodePost(postMessage string) (error, []*Message) {
 	var DecodedMessages  []*Message
 	messages := strings.Split(postMessage,"--NEWMESSAGE--\n")
 	for _,onemessage:= range messages {
 		if onemessage == "" { continue }
-		DecodedMessages = append(DecodedMessages, 
-			Decode("--NEWMESSAGE--\n"+onemessage))
+		err, decoded :=Decode("--NEWMESSAGE--\n"+onemessage)
+		if err != nil {
+			return err, DecodedMessages
+		}
+		DecodedMessages = append(DecodedMessages, decoded)
 	}
-	return DecodedMessages
+	return nil, DecodedMessages
 }
 
 func DecryptPost(publicPostMessage string, keys *Keys) (error, string) {
@@ -64,24 +67,31 @@ func DecryptPost(publicPostMessage string, keys *Keys) (error, string) {
 	return  nil, string(bytes)
 }
 
-func EncryptPost(postMessage string, keys *Keys) string {
+func EncryptPost(postMessage string, keys *Keys) (error, string) {
 	entitylist, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(keys.Public))
 	if err != nil {
-		log.Fatal(err)
+		return err, ""
 	}
 
 	buf := new(bytes.Buffer)
 	w, err := openpgp.Encrypt(buf, entitylist, nil, nil, nil)
 	if err != nil {
+		return err, ""
 	}
-
 	_, err = w.Write([]byte(postMessage))
 	if err != nil {
+		return err, ""
 	}
 	err = w.Close()
 	if err != nil {
+		return err, ""
 	}
 
 	bytes, err := ioutil.ReadAll(buf)
-	return base64.StdEncoding.EncodeToString(bytes)
+	if err != nil {
+		return err, ""
+	}
+
+
+	return nil, base64.StdEncoding.EncodeToString(bytes)
 }

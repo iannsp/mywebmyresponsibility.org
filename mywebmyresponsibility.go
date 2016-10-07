@@ -31,7 +31,10 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		m := message.DecodePost(mStr)
+		err, m := message.DecodePost(mStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		for _,msg := range m {
 			fmt.Fprintf(w,"%s",msg)
 		}
@@ -48,7 +51,10 @@ func EncryptHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Println(err)
 		}
-		m := message.EncryptPost(string(messageStr), myKeys)
+		err, m := message.EncryptPost(string(messageStr), myKeys)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		fmt.Fprintf(w,"%s",m)
 	}
 	w.WriteHeader(http.StatusBadRequest)
