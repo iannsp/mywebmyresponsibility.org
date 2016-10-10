@@ -5,7 +5,7 @@ import(
 	"net/http"
 	"io/ioutil"
 	"log"
-	"github.com/mywebmyresponsibility.org/message"
+	"github.com/mywebmyresponsibility.org/core/message"
 	"bufio"
 	"os"
 

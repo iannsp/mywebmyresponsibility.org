@@ -1,19 +1,19 @@
-package message 
+package message
 
 import (
-	"os"
-	"io"
 	"bytes"
+	"io"
+	"os"
 )
 
-type Keys struct{
-	Public string
-	Private string
+type Keys struct {
+	Public     string
+	Private    string
 	Passphrase []byte
 }
 
-func NewKeys (privatekeyPath string, publickeyPath string, passphrase []byte) (*Keys, error){
-	k := new (Keys)
+func NewKeys(privatekeyPath string, publickeyPath string, passphrase []byte) (*Keys, error) {
+	k := new(Keys)
 	err := k.LoadKey("public", publickeyPath)
 	if err != nil {
 		return nil, err
